@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM lli7flink.azurecr.io/zeppelin-backup:0.11.0 AS zeppelin-distribution
+FROM lli7flink.azurecr.io/zeppelin:0.11.01 AS zeppelin-distribution
 
 # Prepare all interpreter settings for Zeppelin server
 # This steps are not needed, if you you add only specific interpreters settings to your image
@@ -48,7 +48,7 @@ ENV LANG=en_US.UTF-8 \
     ZEPPELIN_WAR_TEMPDIR="/tmp/webapps"
 
 # Copy Zeppelin related files
-COPY flink-1.14.0 /opt/zeppelin/flink-1.14.0
+COPY flink-1.13.3 /opt/zeppelin/flink-1.13.3
 COPY --from=zeppelin-distribution /opt/zeppelin/zeppelin-web-${VERSION}.war ${ZEPPELIN_HOME}/
 COPY --from=zeppelin-distribution /opt/zeppelin/zeppelin-web-angular-${VERSION}.war ${ZEPPELIN_HOME}/
 COPY --from=zeppelin-distribution /opt/zeppelin/conf ${ZEPPELIN_HOME}/conf
@@ -77,7 +77,7 @@ RUN mkdir -p "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/no
      # Allow process to edit /etc/passwd, to create a user entry for zeppelin
     chgrp root /etc/passwd && chmod ug+rw /etc/passwd && \
     # give access to flink
-    chmod -R 775 /opt/zeppelin/flink-1.14.0 && \
+    chmod -R 775 /opt/zeppelin/flink-1.13.3 && \
     # Give access to some specific folders
     chmod -R 775 "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/conf" "${ZEPPELIN_HOME}/notebook" "${ZEPPELIN_HOME}/local-repo"
 
