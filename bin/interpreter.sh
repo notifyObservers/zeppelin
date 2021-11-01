@@ -316,5 +316,13 @@ fi
 # Don't remove this echo, it is for diagnose, this line of output will be redirected to java log4j output.
 # Output that starts with `[INFO]` will be redirected to log4j INFO output. Other outputs from interpreter.sh
 # will be redirected to log4j DEBUG output.
+
+# LL
+# echo "try session mode"
+# exec "kubectl create -f ${FLINK_HOME}/bin/flink/flink-configuration-configmap.yaml"
+# exec "kubectl create -f ${FLINK_HOME}/bin/flink/jobmanager-service.yaml"
+# exec "kubectl create -f ${FLINK_HOME}/bin/flink/jobmanager-session-deployment.yaml"
+# exec "kubectl create -f ${FLINK_HOME}/bin/flink/taskmanager-session-deployment.yaml"
+# ----
 echo "[INFO] Interpreter launch command: ${INTERPRETER_RUN_COMMAND[@]}"
 exec "${INTERPRETER_RUN_COMMAND[@]}"

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM lli7flink.azurecr.io/zeppelin-backup:0.11.0 AS zeppelin-distribution
+FROM lli7flink.azurecr.io/zeppelin:0.11.01 AS zeppelin-distribution
 
 FROM ubuntu:20.04
 

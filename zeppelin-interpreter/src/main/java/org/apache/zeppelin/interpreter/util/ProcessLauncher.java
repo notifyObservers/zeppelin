@@ -86,6 +86,7 @@ public abstract class ProcessLauncher implements ExecuteResultHandler {
   }
 
   public void launch() {
+    // LL: launch starts here
     DefaultExecutor executor = new DefaultExecutor();
     executor.setStreamHandler(new PumpStreamHandler(processOutput));
     this.watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
@@ -184,6 +185,7 @@ public abstract class ProcessLauncher implements ExecuteResultHandler {
 
     @Override
     protected void processLine(String s, int i) {
+      // LL: processing each line?
       // print Interpreter launch command for diagnose purpose
       if (s.startsWith("[INFO]")) {
         LOGGER.info(s);
