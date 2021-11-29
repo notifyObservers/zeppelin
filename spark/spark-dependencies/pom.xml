@@ -43,7 +43,7 @@
 
     <hadoop.version>${hadoop2.7.version}</hadoop.version>
     <yarn.version>${hadoop.version}</yarn.version>
-    <avro.version>1.7.7</avro.version>
+    <avro.version>1.9.0</avro.version>
     <avro.mapred.classifier/>
     <jets3t.version>0.7.1</jets3t.version>
     <protobuf.version>2.4.1</protobuf.version>

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM lli7flink.azurecr.io/zeppelin:0.11.01 AS zeppelin-distribution
+FROM container-image-registry.corp.linkedin.com:8083/temp/lindli/apache/zeppelin:0.11.1 AS zeppelin-distribution
 
 # Prepare all interpreter settings for Zeppelin server
 # This steps are not needed, if you you add only specific interpreters settings to your image
@@ -47,8 +47,37 @@ ENV LANG=en_US.UTF-8 \
     ZEPPELIN_ADDR="0.0.0.0" \
     ZEPPELIN_WAR_TEMPDIR="/tmp/webapps"
 
+# Copy Flink Distro related files
+ENV FLINK_TGZ_URL=https://artifactory.corp.linkedin.com:8083/artifactory/ext-libraries/org/apache/flink/flink-dist/11300.1/flink-dist-11300.1-bin-scala_2.11.tgz
+RUN set -ex; \
+  mkdir -p ${ZEPPELIN_HOME}/liflink && cd ${ZEPPELIN_HOME}/liflink; \
+  wget -nv -O flink.tgz "$FLINK_TGZ_URL" --no-check-certificate; \
+  tar -xf flink.tgz --strip-components=1; \
+  rm flink.tgz; \
+  cd ${ZEPPELIN_HOME};
+
+#COPY avro-1.9.0.jar ${ZEPPELIN_HOME}/liflink/lib
+#COPY flink-1.13.1 ${ZEPPELIN_HOME}/flink-1.13.1
+
+#ENV FLINK_LI_TGZ_URL=https://artifactory.corp.linkedin.com:8083/artifactory/DDS/com/linkedin/flink-li-framework/flink-li-framework/0.0.39/flink-li-framework-0.0.39.tgz
+#RUN set -ex; \
+#  mkdir -p ${ZEPPELIN_HOME}/flink-connector && cd ${ZEPPELIN_HOME}/flink-connector; \
+#  wget -nv -O flink-li-framework.tgz "$FLINK_LI_TGZ_URL" --no-check-certificate; \
+#  tar -xf flink-li-framework.tgz --strip-components=1; \
+#  rm flink-li-framework.tgz; \
+#  cd ${ZEPPELIN_HOME}
+
+RUN set -ex; \
+    mkdir -p ${ZEPPELIN_HOME}/flink-connector-uber; \
+    mkdir -p ${ZEPPELIN_HOME}/flink-li-kafka;
+#COPY flink-li-framework-shadow.jar ${ZEPPELIN_HOME}/flink-connector-uber
+#COPY flink-li-framework-shadow.jar ${ZEPPELIN_HOME}/liflink/lib
+COPY flink-li-kafka-shadow.jar ${ZPPELIN_HOME}/liflink/lib
+COPY flink-li-brooklin-shadow.jar ${ZEPPELIN_HOME}/liflink/lib
+#COPY flink-li-kafka-shadow.jar ${ZEPPELIN_HOME}/flink-li-kafka
+COPY application.cfg ${ZEPPELIN_HOME}/flink-connector-uber
+
 # Copy Zeppelin related files
-COPY flink-1.13.3 /opt/zeppelin/flink-1.13.3
 COPY --from=zeppelin-distribution /opt/zeppelin/zeppelin-web-${VERSION}.war ${ZEPPELIN_HOME}/
 COPY --from=zeppelin-distribution /opt/zeppelin/zeppelin-web-angular-${VERSION}.war ${ZEPPELIN_HOME}/
 COPY --from=zeppelin-distribution /opt/zeppelin/conf ${ZEPPELIN_HOME}/conf
@@ -64,12 +93,12 @@ COPY --from=zeppelin-distribution /opt/zeppelin/k8s ${ZEPPELIN_HOME}/k8s
 # Decide
 ## 1) Copy and activate all interpreters (default)
 ## LL : don't use activate all!!! it doesn't copy flink related interpreter!
-COPY --from=zeppelin-distribution /opt/zeppelin/interpreter ${ZEPPELIN_HOME}/interpreter
+#COPY --from=zeppelin-distribution /opt/zeppelin/interpreter ${ZEPPELIN_HOME}/interpreter
 ## 2) Copy and activate only a specific set of interpreter
 # COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/spark/interpreter-setting.json ${ZEPPELIN_HOME}/interpreter/spark/interpreter-setting.json
 # COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/jdbc/interpreter-setting.json ${ZEPPELIN_HOME}/interpreter/jdbc/interpreter-setting.json
 # COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/md/interpreter-setting.json ${ZEPPELIN_HOME}/interpreter/md/interpreter-setting.json
-#COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/flink ${ZEPPELIN_HOME}/interpreter/flink
+COPY --from=zeppelin-distribution /opt/zeppelin/interpreter/flink ${ZEPPELIN_HOME}/interpreter/flink
 
 COPY log4j.properties ${ZEPPELIN_HOME}/conf/
 
@@ -77,7 +106,7 @@ RUN mkdir -p "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/no
      # Allow process to edit /etc/passwd, to create a user entry for zeppelin
     chgrp root /etc/passwd && chmod ug+rw /etc/passwd && \
     # give access to flink
-    chmod -R 775 /opt/zeppelin/flink-1.13.3 && \
+    chmod -R 775 "${ZEPPELIN_HOME}/liflink" && \
     # Give access to some specific folders
     chmod -R 775 "${ZEPPELIN_HOME}/logs" "${ZEPPELIN_HOME}/run" "${ZEPPELIN_HOME}/conf" "${ZEPPELIN_HOME}/notebook" "${ZEPPELIN_HOME}/local-repo"
 

@@ -1,0 +1,102 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zeppelin-server-conf-map
+data:
+  # 'serviceDomain' is a Domain name to use for accessing Zeppelin UI.
+  # Should point IP address of 'zeppelin-server' service.
+  #
+  # Wildcard subdomain need to be point the same IP address to access service inside of Pod (such as SparkUI).
+  # i.e. if service domain is 'local.zeppelin-project.org', DNS configuration should make 'local.zeppelin-project.org' and '*.local.zeppelin-project.org' point the same address.
+  #
+  # Default value is 'local.zeppelin-project.org' while it points 127.0.0.1 and `kubectl port-forward zeppelin-server` will give localhost to connects.
+  # If you have your ingress controller configured to connect to `zeppelin-server` service and have a domain name for it (with wildcard subdomain point the same address), you can replace serviceDomain field with your own domain.
+  SERVICE_DOMAIN: local.zeppelin-project.org:8080
+  ZEPPELIN_K8S_SPARK_CONTAINER_IMAGE: spark:2.4.5
+  ZEPPELIN_K8S_CONTAINER_IMAGE: container-image-registry.corp.linkedin.com:8083/temp/lindli/apache/zeppelin-interpreter:0.11.8
+  ZEPPELIN_HOME: /opt/zeppelin
+  ZEPPELIN_SERVER_RPC_PORTRANGE: 12320:12320
+  # default value of 'master' property for spark interpreter.
+  SPARK_MASTER: k8s://https://kubernetes.default.svc
+  # default value of 'SPARK_HOME' property for spark interpreter.
+  SPARK_HOME: /spark
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zeppelin-server
+  labels:
+    app.kubernetes.io/name: zeppelin-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: zeppelin-server
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: zeppelin-server
+    spec:
+      serviceAccountName: samza-testing      
+      containers:
+      - name: zeppelin-server
+        image: container-image-registry.corp.linkedin.com:8083/temp/lindli/apache/zeppelin-server:0.11.8
+        command: ["sh", "-c", "$(ZEPPELIN_HOME)/bin/zeppelin.sh"]
+        imagePullPolicy: Always
+        lifecycle:
+          preStop:
+            exec:
+              # SIGTERM triggers a quick exit; gracefully terminate instead
+              command: ["sh", "-c", "ps -ef | grep org.apache.zeppelin.server.ZeppelinServer | grep -v grep | awk '{print $2}' | xargs kill"]
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: https
+          containerPort: 8443
+        - name: rpc
+          containerPort: 12320
+        env:
+        - name: POD_UID
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.uid
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        envFrom:
+        - configMapRef:
+            name: zeppelin-server-conf-map      
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: flink
+spec:
+  ports:
+    - name: http
+      port: 8080
+    - name: rpc            # port name is referenced in the code. So it shouldn't be changed.
+      port: 12320
+  selector:
+    app.kubernetes.io/name: flink
