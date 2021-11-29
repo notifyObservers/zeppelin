@@ -23,18 +23,18 @@ import org.junit.runners.Parameterized;
 import java.util.Arrays;
 import java.util.List;
 
-@RunWith(value = Parameterized.class)
-public class FlinkIntegrationTest111 extends FlinkIntegrationTest {
+//@RunWith(value = Parameterized.class)
+public class ZeppelinFlinkClusterTest113 extends ZeppelinFlinkClusterTest {
 
   @Parameterized.Parameters
   public static List<Object[]> data() {
     return Arrays.asList(new Object[][]{
-            {"1.11.3", "2.11"},
-            {"1.11.3", "2.12"}
+            {"1.13.2", "2.11"},
+            {"1.13.2", "2.12"}
     });
   }
 
-  public FlinkIntegrationTest111(String flinkVersion, String scalaVersion) {
+  public ZeppelinFlinkClusterTest113(String flinkVersion, String scalaVersion) throws Exception {
     super(flinkVersion, scalaVersion);
   }
 }

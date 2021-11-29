@@ -23,17 +23,18 @@ import org.junit.runners.Parameterized;
 import java.util.Arrays;
 import java.util.List;
 
-//@RunWith(value = Parameterized.class)
-public class ZeppelinFlinkClusterTest110 extends ZeppelinFlinkClusterTest {
+@RunWith(value = Parameterized.class)
+public class ZeppelinSparkClusterTest32 extends ZeppelinSparkClusterTest {
+
+  public ZeppelinSparkClusterTest32(String sparkVersion, String hadoopVersion) throws Exception {
+    super(sparkVersion, hadoopVersion);
+  }
 
   @Parameterized.Parameters
   public static List<Object[]> data() {
     return Arrays.asList(new Object[][]{
-            {"1.10.2"}
+        {"3.2.0", "2.7"},
+        {"3.2.0", "3.2"}
     });
-  }
-
-  public ZeppelinFlinkClusterTest110(String flinkVersion) throws Exception {
-    super(flinkVersion);
   }
 }
